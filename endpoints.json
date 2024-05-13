@@ -1,0 +1,31 @@
+{
+    "endpoints": {
+      "/detect_text": {
+        "method": "POST",
+        "description": "Upload an image of the ID card and detect text in it",
+        "parameters": {
+          "image": {
+            "type": "file",
+            "description": "Image file of the ID card to be uploaded"
+          }
+        },
+        "response": {
+          "success": {
+            "status": 200,
+            "content": {
+              "message": "success",
+              "factory_number": "Accepted_text"
+            }
+          },
+          "error": {
+            "status": 400,
+            "content": {
+              "message": "error",
+              "error": "No valid factory number detected"
+            }
+          }
+        }
+      }
+    }
+  }
+  
