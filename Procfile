@@ -1,0 +1,1 @@
+web: python cv_model.py
