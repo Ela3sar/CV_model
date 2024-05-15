@@ -1,16 +1,9 @@
-from flask import Flask, request, jsonify
 import cv2
 import numpy as np
 import easyocr
-import json  # استيراد وحدة JSON
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-
-# تحميل محتوى ملف ال JSON
-with open('endpoints.json', 'r') as f:
-    endpoints_data = json.load(f)
-
-# تعريف الدوال
 
 def word_detect(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -37,24 +30,24 @@ def processing(img):
     img_blur = cv2.GaussianBlur(img_gray, (5, 5), 1)
     img_canny = cv2.Canny(img_blur, 200, 200)
 
-    Kernal = np.ones((5, 5))
-    img_Dial = cv2.dilate(img_canny, Kernal, iterations=2)
-    img_Thres = cv2.erode(img_Dial, Kernal, iterations=1)
+    kernal = np.ones((5, 5))
+    img_dilate = cv2.dilate(img_canny, kernal, iterations=2)
+    img_thresh = cv2.erode(img_dilate, kernal, iterations=1)
 
-    return img_Thres
+    return img_thresh
 
-def getContours(image):
+def get_contours(image):
     biggest = np.array([])
-    maxArea = 0
+    max_area = 0
     contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     for cnt in contours:
         area = cv2.contourArea(cnt)
         if area > 800:
             peri = cv2.arcLength(cnt, True)
             approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
-            if area > maxArea and len(approx) == 4:
+            if area > max_area and len(approx) == 4:
                 biggest = approx
-                maxArea = area
+                max_area = area
     return biggest
 
 def reorder(points):
@@ -82,7 +75,6 @@ def warp(image, biggest, img_size, target_width=840, target_height=530):
     
     return img_resized
 
-# تغييرات في الـ endpoint /detect_text لاستخدام المحتوى المحمل من ملف JSON
 @app.route('/detect_text', methods=['POST'])
 def detect_text():
     uploaded_file = request.files['image']
@@ -105,13 +97,14 @@ def detect_text():
                 condition = True
                 break
 
-        # استخدام المحتوى المحمل من ملف JSON لتقديم الرد
         if condition:
-            return jsonify(endpoints_data['success']), 200
+            return jsonify({"success": True, "ID": Accepted_text}), 200
         else:
-            return jsonify(endpoints_data['error']), 400
+            return jsonify({"success": False, "message": "Not a valid ID card"}), 400
     else:
-        return jsonify({"message": "error", "error": "No image uploaded"}), 400
+        return jsonify({"success": False, "message": "No image uploaded"}), 400
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
